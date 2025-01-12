@@ -16,6 +16,10 @@
                 <strong>Service:</strong> {{ password.service }}<br>
                 <strong>Username:</strong> {{ password.service_username }}<br>
                 <strong>Password:</strong> {{ password.service_password }}
+                <form action="/delete_password/{{ password.id }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="username" value="{{ user.username }}">
+                    <button type="submit">Delete</button>
+                </form>
             </li>
             {% endfor %}
         </ul>
@@ -29,6 +33,13 @@
             <label for="service_password">Service Password</label>
             <input type="password" id="service_password" name="service_password" required>
             <button type="submit">Add Password</button>
+        </form>
+        <h3>Search Passwords</h3>
+        <form action="/search_passwords" method="POST">
+            <input type="hidden" name="username" value="{{ user.username }}">
+            <label for="search_term">Search Term</label>
+            <input type="text" id="search_term" name="search_term" required>
+            <button type="submit">Search</button>
         </form>
     </div>
 </body>
