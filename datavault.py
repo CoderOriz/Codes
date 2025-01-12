@@ -29,6 +29,7 @@ def create_tables():
     db.create_all()
 
 # Routes
+
 @app.route('/register.html', methods=['POST'])
 def register():
     data = request.get_json()
