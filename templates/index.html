@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h2>Dashboard</h2>
+    <h3>Save New Password</h3>
+    <form action="/passwords" method="post">
+        <label for="service">Service Name:</label>
+        <input type="text" id="service" name="service" required>
+        <br><br>
+        <label for="service_username">Service Username:</label>
+        <input type="text" id="service_username" name="service_username" required>
+        <br><br>
+        <label for="service_password">Service Password:</label>
+        <input type="password" id="service_password" name="service_password" required>
+        <br><br>
+        <button type="submit">Save Password</button>
+    </form>
+    
+    <h3>Your Saved Passwords</h3>
+    <div id="passwords">
+        <!-- Display passwords here -->
+    </div>
+</body>
+</html>
