@@ -5,10 +5,9 @@ import os
 
 app = Flask(__name__)
 
-# Configuring SQLAlchemy for SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///password_manager.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///password_manager.db'  # Use SQLite for simplicity
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    
+db = SQLAlchemy(app)                                                    
 
 # Models
 class User(db.Model):
