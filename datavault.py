@@ -21,7 +21,6 @@ class Password(db.Model):
     service = db.Column(db.String(150), nullable=False)
     service_username = db.Column(db.String(150), nullable=False)
     service_password = db.Column(db.String(200), nullable=False)
-    hashed = db.Column(db.Boolean, default=True)
 
 # Initialize the database
 @app.before_request
@@ -66,15 +65,8 @@ def dashboard(username):
     user = User.query.filter_by(username=username).first()
     if not user:
         return redirect(url_for('login'))
-    return render_template('dashboard.html', user=user)
-
-@app.route('/passwords/<username>')
-def passwords(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return redirect(url_for('login'))
     passwords = Password.query.filter_by(user_id=user.id).all()
-    return render_template('passwords.html', user=user, passwords=passwords)
+    return render_template('dashboard.html', user=user, passwords=passwords)
 
 @app.route('/add_password', methods=['POST'])
 def add_password():
@@ -82,19 +74,15 @@ def add_password():
     user = User.query.filter_by(username=data['username']).first()
     if not user:
         return jsonify({'message': 'User not found'}), 404
-    service_password = data['service_password']
-    if data.get('hash_password') == 'on':
-        service_password = hash_password(service_password)
     new_password = Password(
         user_id=user.id,
         service=data['service'],
         service_username=data['service_username'],
-        service_password=service_password,
-        hashed=data.get('hash_password') == 'on'
+        service_password=data['service_password']
     )
     db.session.add(new_password)
     db.session.commit()
-    return redirect(url_for('passwords', username=user.username))
+    return redirect(url_for('dashboard', username=user.username))
 
 @app.route('/delete_password/<int:password_id>', methods=['POST'])
 def delete_password(password_id):
@@ -102,19 +90,17 @@ def delete_password(password_id):
     if password:
         db.session.delete(password)
         db.session.commit()
-    return redirect(url_for('passwords', username=request.form['username']))
+    return redirect(url_for('dashboard', username=request.form['username']))
 
-@app.route('/toggle_hash/<int:password_id>', methods=['POST'])
-def toggle_hash(password_id):
-    password = Password.query.get(password_id)
-    if password:
-        if password.hashed:
-            password.service_password = password.service_password  # No change needed
-        else:
-            password.service_password = hash_password(password.service_password)
-        password.hashed = not password.hashed
-        db.session.commit()
-    return redirect(url_for('passwords', username=request.form['username']))
+@app.route('/search_passwords', methods=['POST'])
+def search_passwords():
+    data = request.form
+    user = User.query.filter_by(username=data['username']).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    search_term = data['search_term']
+    passwords = Password.query.filter(Password.user_id == user.id, Password.service.contains(search_term)).all()
+    return render_template('dashboard.html', user=user, passwords=passwords)
 
 if __name__ == '__main__':
     app.run(debug=True)
