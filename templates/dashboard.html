@@ -1,46 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
     <div class="container">
-        <h2>Welcome, {{ user.username }}</h2>
-        <h3>Saved Passwords</h3>
-        <ul>
-            {% for password in passwords %}
-            <li>
-                <strong>Service:</strong> {{ password.service }}<br>
-                <strong>Username:</strong> {{ password.service_username }}<br>
-                <strong>Password:</strong> {{ password.service_password }}
-                <form action="/delete_password/{{ password.id }}" method="POST" style="display:inline;">
-                    <input type="hidden" name="username" value="{{ user.username }}">
-                    <button type="submit">Delete</button>
-                </form>
-            </li>
-            {% endfor %}
-        </ul>
-        <h3>Add New Password</h3>
-        <form action="/add_password" method="POST">
-            <input type="hidden" name="username" value="{{ user.username }}">
-            <label for="service">Service</label>
-            <input type="text" id="service" name="service" required>
-            <label for="service_username">Service Username</label>
-            <input type="text" id="service_username" name="service_username" required>
-            <label for="service_password">Service Password</label>
-            <input type="password" id="service_password" name="service_password" required>
-            <button type="submit">Add Password</button>
-        </form>
-        <h3>Search Passwords</h3>
-        <form action="/search_passwords" method="POST">
-            <input type="hidden" name="username" value="{{ user.username }}">
-            <label for="search_term">Search Term</label>
-            <input type="text" id="search_term" name="search_term" required>
-            <button type="submit">Search</button>
-        </form>
+      <h2>Welcome, {{ user.username }}</h2>
+      <div class="button-container">
+          <a href="{{ url_for('passwords', username=user.username) }}" class = "button">View Saved Passwords</a>
+        <a href="{{ url_for('logout') }}" class = "button">Logout</a>
+        
+      </div>
+      <ul>
+        {% for password in passwords %}
+        <li>
+          <strong>Service:</strong> {{ password.service }}<br />
+          <strong>Username:</strong> {{ password.service_username }}<br />
+          <strong>Password:</strong> {{ password.service_password }}
+          <form
+            action="/delete_password/{{ password.id }}"
+            method="POST"
+            style="display: inline"
+          >
+            <input type="hidden" name="username" value="{{ user.username }}" />
+            <button type="submit">Delete</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+      <h3>Add New Password</h3>
+      <form action="/add_password" method="POST">
+        <input type="hidden" name="username" value="{{ user.username }}" />
+        <label for="service">Service</label>
+        <input type="text" id="service" name="service" required />
+        <label for="service_username">Service Username</label>
+        <input
+          type="text"
+          id="service_username"
+          name="service_username"
+          required
+        />
+        <label for="service_password">Service Password</label>
+        <input
+          type="password"
+          id="service_password"
+          name="service_password"
+          required
+        />
+        <button type="submit">Add Password</button>
+      </form>
     </div>
-</body>
+  </body>
 </html>

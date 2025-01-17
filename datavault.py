@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-import hashlib
 
 # Initialize Flask app
 app = Flask(__name__)
+app.secret_key = '1234567!@#$%^&'  # Replace with a secure secret key
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///password_manager.db'  # Use SQLite for simplicity
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    
@@ -27,24 +27,16 @@ class Password(db.Model):
 def create_tables():
     db.create_all()
 
-# Helper functions for hashing and verifying passwords
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def verify_password(stored_password, provided_password):
-    return stored_password == hashlib.sha256(provided_password.encode()).hexdigest()
-
 # Routes
 @app.route('/')
 def home():
-    return redirect(url_for('register'))
+    return render_template('home.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         data = request.form
-        hashed_password = hash_password(data['password'])
-        new_user = User(username=data['username'], password=hashed_password)
+        new_user = User(username=data['username'], password=data['password'])
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -55,34 +47,54 @@ def login():
     if request.method == 'POST':
         data = request.form
         user = User.query.filter_by(username=data['username']).first()
-        if user and verify_password(user.password, data['password']):
+        if user and user.password == data['password']:
+            session['username'] = user.username
             return redirect(url_for('dashboard', username=user.username))
         return jsonify({'message': 'Invalid credentials'}), 401
     return render_template('login.html')
 
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('login'))
+
 @app.route('/dashboard/<username>')
 def dashboard(username):
+    if 'username' not in session or session['username'] != username:
+        return redirect(url_for('login'))
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', user=user)
+
+@app.route('/passwords/<username>')
+def passwords(username):
+    if 'username' not in session or session['username'] != username:
+        return redirect(url_for('login'))
     user = User.query.filter_by(username=username).first()
     if not user:
         return redirect(url_for('login'))
     passwords = Password.query.filter_by(user_id=user.id).all()
-    return render_template('dashboard.html', user=user, passwords=passwords)
+    return render_template('passwords.html', user=user, passwords=passwords)
 
 @app.route('/add_password', methods=['POST'])
 def add_password():
-    data = request.form
-    user = User.query.filter_by(username=data['username']).first()
-    if not user:
-        return jsonify({'message': 'User not found'}), 404
-    new_password = Password(
-        user_id=user.id,
-        service=data['service'],
-        service_username=data['service_username'],
-        service_password=data['service_password']
-    )
-    db.session.add(new_password)
-    db.session.commit()
-    return redirect(url_for('dashboard', username=user.username))
+    try:
+        data = request.form
+        user = User.query.filter_by(username=data['username']).first()
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+        new_password = Password(
+            user_id=user.id,
+            service=data['service'],
+            service_username=data['service_username'],
+            service_password=data['service_password']
+        )
+        db.session.add(new_password)
+        db.session.commit()
+        return redirect(url_for('passwords', username=user.username))
+    except Exception as e:
+        return jsonify({'message': 'An error occurred while adding the password', 'error': str(e)}), 500
 
 @app.route('/delete_password/<int:password_id>', methods=['POST'])
 def delete_password(password_id):
@@ -90,17 +102,7 @@ def delete_password(password_id):
     if password:
         db.session.delete(password)
         db.session.commit()
-    return redirect(url_for('dashboard', username=request.form['username']))
-
-@app.route('/search_passwords', methods=['POST'])
-def search_passwords():
-    data = request.form
-    user = User.query.filter_by(username=data['username']).first()
-    if not user:
-        return jsonify({'message': 'User not found'}), 404
-    search_term = data['search_term']
-    passwords = Password.query.filter(Password.user_id == user.id, Password.service.contains(search_term)).all()
-    return render_template('dashboard.html', user=user, passwords=passwords)
+    return redirect(url_for('passwords', username=request.form['username']))
 
 if __name__ == '__main__':
     app.run(debug=True)
