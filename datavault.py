@@ -9,7 +9,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///password_manager.db'  # Use S
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    
 db = SQLAlchemy(app)                                                    
 
-# Models
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
